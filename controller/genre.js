@@ -10,12 +10,9 @@ function get(req, res, next) {
 
     if (req.user.is_admin) {
 
-        genreModel.fetchAll().then((op)=>{
+        genreModel.where({is_deleted: false}).fetchAll().then((op)=>{
             return res.json(op)
         })
-        // knex('genre').select().where({is_deleted : false}).then((genre) => {
-        //     return res.json(genre)
-        // })
     }
 }
 
@@ -33,16 +30,6 @@ function post(req, res, next) {
         }).save().then((genre)=>{
             res.json(genre)
         })
-        // knex('genre').insert(
-        //     {
-        //         name: name
-        //     }
-        // ).then(() => {
-        //     knex.select().from('genre')
-        //         .then((genre) => {
-        //             res.send(genre.pop())
-        //         })
-        // })
 
     }
 
@@ -61,13 +48,6 @@ function patch(req , res ,next ){
         genreModel.where({id:id}).save({name:name},{patch:true}).then(op=>{
             res.json(op)
         })
-        // knex('genre').update(
-        //     {
-        //         name: name
-        //     }
-        // ).where({id : id }).then((genre ) => {
-        //     res.json(genre)
-        // })
 
     }
 }
@@ -80,21 +60,11 @@ function delete_rec(req , res ,next ){
     }
 
     if (req.user.is_admin) {
-        genreModel.where({id : id }).distroy().then(()=>{
-            res.send(1)
+        genreModel.where({id : id }).save({is_deleted : true},{patch : true}).then((genre)=>{
+            res.json(genre)
         })
-        // knex('genre').update(
-        //     {
-        //         is_deleted : true
-        //     }
-        // ).where({id : id }).then((genre ) => {
-        //     res.json(genre)
-        // })
-
     }
-
 }
-
 module.exports = { get, post , patch , delete_rec}
 
 

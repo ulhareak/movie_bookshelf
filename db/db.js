@@ -12,3 +12,4 @@ bookshelf.plugin(require('bookshelf-bulk-save'));
 bookshelf.plugin('registry');
 
 module.exports = bookshelf
+

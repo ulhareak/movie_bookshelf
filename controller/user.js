@@ -8,7 +8,7 @@ const user = require('../models/user')
 function get(req, res, next) {
 
     if (req.user.is_admin) {
-        user.fetchAll().then(result => {
+        user.where({is_deleted:false}).fetchAll().then(result => {
             res.json(result)
         })
     }
@@ -26,10 +26,6 @@ function getById(req, res, next) {
         user.where({ id: id }).fetch().then(op => {
             res.json(op)
         })
-        // knex('user').select().where({ id: id, is_deleted: false }).then((user) => {
-        //     // console.log(req.user);
-        //     return res.json(user)
-        // })
 
     }
 }
@@ -41,46 +37,30 @@ function post(req, res, next) {
     if (!first_name | !email | !mobile | !is_admin in [true, false] | !password) {
         return res.json({ success: false, msg: 'all fields are mandatory ....' })
     }
+
+
     const user = bcrypt.hash(password, 10)
         .then(hashedPassword => {
-             user.forge({
+            return knex('user').insert(
+                {
                     first_name: first_name,
                     last_name: last_name,
                     email: email,
                     mobile: mobile,
                     password: hashedPassword,
                     is_admin: is_admin
-                }).save().then((user) => {
-                    knex('user_tokens').insert({ user_id: _user.id }).then();
-                    return res.json(_user)
+                }).then(() => {
+                    const user = knex.select().from('user')
+                        .then((user) => {
+                            const _user = user.pop()
+                            knex('user_tokens').insert({ user_id: _user.id }).then();
+                            return res.json(_user)
+
+                        })
+
+
                 })
-
-
-        })
-
-
-    // const user = bcrypt.hash(password, 10)
-    //     .then(hashedPassword => {
-    //         return knex('user').insert(
-    //             {
-    //                 first_name: first_name,
-    //                 last_name: last_name,
-    //                 email: email,
-    //                 mobile: mobile,
-    //                 password: hashedPassword,
-    //                 is_admin: is_admin
-    //             }).then(() => {
-    //                 const user = knex.select().from('user')
-    //                     .then((user) => {
-    //                         const _user = user.pop()
-    //                         knex('user_tokens').insert({ user_id: _user.id }).then();
-    //                         return res.json(_user)
-
-    //                     })
-
-
-    //             })
-    //       })
+          })
 
 }
 
@@ -107,22 +87,33 @@ function delete_rec(req, res, next) {
 
     const id = req.params.id
     if (req.user.is_admin) {
-        knex('user').select().where({ id: id }).update({ is_deleted: true }).then(() => {
-            knex('user').select().where({ id: id }).then((user) => {
-                res.json(user)
-            })
+        user.where({id:id}).save({is_deleted:true} ,{patch : true}).then(op=>{
+            res.json(op)
         })
+        // knex('user').select().where({ id: id }).update({ is_deleted: true }).then(() => {
+        //     knex('user').select().where({ id: id }).then((user) => {
+        //         res.json(user)
+        //     })
+        // })
 
     }
 }
 
 function put(req, res, next) {
-    const { first_name, last_name, email, mobile
-        , is_admin } = req.body;
+    var id = req.params.id
+    if (!id) {
+        return res.json({ success: false, msg: 'id not present' })
+    }
+
 
     if (!first_name | !email | !mobile | !is_admin in [true, false]) {
         return res.json({ success: false, msg: 'all fields are mandatory ....' })
     }
+
+
+    user.where({id:id}).save(re.body , {patch : true }).then(op=>{
+        res.json(op)
+    })
 
 }
 module.exports = { get, post, getById, patch, delete_rec }

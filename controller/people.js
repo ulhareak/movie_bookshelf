@@ -5,7 +5,7 @@ const peopleModel = require('../models/people')
 
 function get(req, res) {
     if (req.user.is_admin) {
-        peopleModel.fetchAll().then(op=>{
+        peopleModel.where({is_deleted : false}).fetchAll().then(op=>{
             res.json(op)
         })
     }
@@ -49,8 +49,8 @@ function delete_rec( req , res , next ){
 
     if (req.user.is_admin) {
 
-        peopleModel.where({id : id }).destroy().then(()=>{
-            res.send(1)
+        peopleModel.where({id : id }).save({is_deleted : true}, { patch : true}).then(()=>{
+            res.json({status : "ok"})
         })
 
     }

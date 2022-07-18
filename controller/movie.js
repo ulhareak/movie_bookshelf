@@ -5,8 +5,7 @@ const movieModel = require('../models/movie')
 const directorModel = require('../models/director')
 const castModel = require('../models/cast')
 var bookshelf = require('../db/db')
-// bookshelf.plugin(require('bookshelf-bulk-save'));
-// bookshelf.plugin('registry');
+const { user } = require('pg/lib/defaults')
 
 
 
@@ -15,33 +14,6 @@ function get(req, res, next) {
     movieModel.fetchAll({ withRelated: ['director', 'cast'], required: true }).then(result => {
         res.json(result)
     })
-
-    // knex('movie').select('movie.id', 'movie.genre_id',
-    //     'title', 'director.director_id', 'cast.actor').where('movie.is_deleted', 'false')
-    //     .innerJoin('director', 'movie.id', '=', 'director.movie')
-    //     .innerJoin('cast', 'movie.id', '=', 'cast.movie')
-    //     .then((response) => {
-    //         // console.log(response);
-    //         const resultMap = response.reduce((result, row) => {
-    //             result[row.id] = result[row.id] || {
-    //                 ...row,
-    //                 director_id: [],
-    //                 actor: []
-    //             };
-
-    //             if (!result[row.id].director_id.includes(row.director_id)) {
-    //                 result[row.id].director_id.push(row.director_id)
-    //             }
-    //             if (!result[row.id].actor.includes(row.actor)) {
-    //                 result[row.id].actor.push(row.actor)
-    //             }
-
-    //             return result;
-    //         }, {});
-
-    //         // console.log(Object.values(resultMap));
-    //         res.json(Object.values(resultMap))
-    //     })
 
 }
  function post(req, res) {
@@ -92,54 +64,6 @@ function get(req, res, next) {
                     res.json(result)
                 })
             })
-        // knex('movie').insert(
-        //     {
-        //         genre_id: genre_id,
-        //         title: title,
-        //         duration: duration,
-        //         info: info
-        //     }).then((movie) => {
-
-        //         knex.select().from('movie')
-        //             .then((movie) => {
-        //                 res_data = movie.pop()
-        //                 console.log('inside', res_data);
-
-        //                 var actor = []
-        //                 var director = []
-
-        //                 for (let i = 0; i < actor_ids.length; i++) {
-        //                     actor.push({
-        //                         movie: res_data.id,
-        //                         actor: actor_ids[i]
-        //                     })
-        //                 }
-
-        //                 for (let i = 0; i < director_ids.length; i++) {
-        //                     director.push({
-        //                         movie: res_data.id,
-        //                         director_id: director_ids[i]
-        //                     })
-        //                 }
-
-        //                 knex('director').insert(
-        //                     director
-        //                 ).then(() => { })
-
-        //                 knex('cast').insert(
-        //                     actor
-        //                 ).then(() => { })
-
-
-        //                 res_data["director_ids"] = director_ids;
-        //                 res_data["actor_ids"] = actor_ids;
-        //                 console.log(res_data);
-
-        //                 return res.json(res_data)
-
-
-        //             })
-        //     })
 
     }
 }
@@ -233,13 +157,18 @@ function deleteMovie(req, res, next) {
     }
 
     if (req.user.is_admin) {
-        knex('movie').update(
-            {
-                is_deleted: true
-            }
-        ).where({ id: id }).then((movie) => {
-            res.json(movie)
+
+
+        user.where({id:id}).save({is_deleted:true},{patch : true}).then(op=>{
+            res.json(op)
         })
+        // knex('movie').update(
+        //     {
+        //         is_deleted: true
+        //     }
+        // ).where({ id: id }).then((movie) => {
+        //     res.json(movie)
+        // })
 
     }
 }
